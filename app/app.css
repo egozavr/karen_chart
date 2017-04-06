@@ -1,7 +1,18 @@
+
 .job-chart {
   border: 1px solid black;
 }
 
 .bar {
   fill: DarkSlateGray;
+}
+
+.job-chart-xaxis line , .job-chart-xaxis path {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.job-chart-xaxis text {
+  font: 10px sans-serif;
 }
