@@ -4,15 +4,26 @@
 }
 
 .bar {
+  fill: SlateGray;
+  /*fill-opacity: .5;*/
+}
+
+.bar-plan {
   fill: DarkSlateGray;
 }
 
-.job-chart-xaxis line , .job-chart-xaxis path {
+.job-chart-xaxis line, .job-chart-xaxis path {
   fill: none;
   stroke: #000;
   shape-rendering: crispEdges;
 }
 
-.job-chart-xaxis text {
-  font: 10px sans-serif;
+.job-chart-yaxis line, .job-chart-yaxis path {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.job-chart-xaxis text, .job-chart-yaxis text {
+  font: 12px sans-serif;
 }

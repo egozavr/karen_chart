@@ -29,7 +29,6 @@ function ChartController($http, moment, TS_FORMAT) {
     });
 
     function getData(data) {
-        console.log(data.length);
         self.data = [];
         for (let i = 0; i < data.length; i++) {
             let job = data[i];
@@ -42,6 +41,7 @@ function ChartController($http, moment, TS_FORMAT) {
                         .asMinutes() :
                     moment.duration(moment().diff(moment(job.runstarttimestamp, TS_FORMAT)))
                         .asMinutes(),
+                plan: job.planDSJob.duration ? job.planDSJob.duration : 0,
                 result: job.runmajorstatus,
                 state: job.runminorstatus
             });
@@ -49,13 +49,24 @@ function ChartController($http, moment, TS_FORMAT) {
     }
 
     function plotChart() {
+
+        const xAxisTickFormat = 'DD MMM';
+
         let jobData = self.data;
+        let jobPlanData = self.data.map(function (d) {
+            return {
+                start: d.start,
+                height: d.plan < d.fact ? d.plan : d.fact
+            }
+        });
         let margin = {top: 20, right: 0, bottom: 100, left: 50};
         let width = 800 - margin.left - margin.right;
         let height = 600 - margin.top - margin.bottom;
 
         let xsc = d3.scale.ordinal()
-            .domain(jobData.map(function (d) {return d.start}))
+            .domain(jobData.map(function (d) {
+                return d.start
+            }))
             .rangeRoundBands([0, width], .15);
 
         let ysc = d3.scale.linear()
@@ -65,8 +76,11 @@ function ChartController($http, moment, TS_FORMAT) {
             .range([height, 0]);
 
         let xAxis = d3.svg.axis()
-            .scale(xsc).orient('bottom');
-            // .tickValues(function (d) {return d});
+            .scale(xsc).orient('bottom')
+            .tickFormat(d => moment(d, TS_FORMAT).format(xAxisTickFormat));
+
+        let yAxis = d3.svg.axis()
+            .scale(ysc).orient('left');
 
         let chart = d3.select('.job-chart')
             .attr('width', width + margin.left + margin.right)
@@ -80,20 +94,31 @@ function ChartController($http, moment, TS_FORMAT) {
             .call(xAxis)
             .selectAll('text')
             .attr({
-                x: 9, y: 0, dy: '.35em'
+                x: 30, y: 0, dy: '.4em', 'text-anchor': 'start'
             })
-            .attr('transform', 'rotate(90)')
-        ;
+            .attr('transform', 'rotate(90)');
 
+        chart.append('g')
+            .attr('class', 'job-chart-yaxis')
+            .call(yAxis);
+
+        //TODO: Try to append both bar and bar-plan at one time with <g> element
         let bar = chart.selectAll('.bar')
             .data(jobData)
             .enter().append('rect')
             .attr('class', 'bar')
-            .attr('x', function (d) {return xsc(d.start)})
-            .attr('y', function (d) {return ysc(d.fact)})
-            .attr('height', function (d) {
-                return height - ysc(d.fact)
-            })
+            .attr('x', d => xsc(d.start))
+            .attr('y', d => ysc(d.fact))
+            .attr('height', d => height - ysc(d.fact))
+            .attr('width', xsc.rangeBand());
+
+        let planBar = chart.selectAll('.bar-plan')
+            .data(jobPlanData)
+            .enter().append('rect')
+            .attr('class', 'bar-plan')
+            .attr('x', d => xsc(d.start))
+            .attr('y', d => ysc(d.height))
+            .attr('height', d => height - ysc(d.height))
             .attr('width', xsc.rangeBand());
     }
 
